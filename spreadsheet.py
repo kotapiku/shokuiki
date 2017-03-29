@@ -50,7 +50,7 @@ def calc():
         sheet.update_acell('I{}'.format(5+i*11),winperson)
 
 def ranking():
-    cpcells=[(3,9),(4,,9),(5,9),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(10,6),(11,6)]
+    cpcells=[(3,9),(4,9),(5,9),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(10,6),(11,6)]
     cpnum=0
     flag=True
     while flag:
