@@ -68,14 +68,12 @@ def ranking():
         cpvalue.sort(reverse=True)
 
         while cpvalue:
-
             if (len(cpvalue) == 1) or (cpvalue[0] != cpvalue[1]):
                 for cpv in cpval_2:
                     if cpv[1] == cpvalue[0]:
                         answer.append(teams[cpv[0]])
                         tms.remove(cpv[0])
                 del cpvalue[0]
-
 
             else:
                 cpvalue = []
