@@ -1,5 +1,6 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import copy
 
 scope = ['https://spreadsheets.google.com/feeds']
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
@@ -50,19 +51,27 @@ def calc():
         sheet.update_acell('I{}'.format(5 + i * 11), winperson)
 
 
-def ranking():
-    teamcells = ['B3', 'B14', 'B25', 'B36']
-    teams = [sheet.acell(teamcells[i]).value for i in range(4)]
+def getvalues():
+    katiten = [int(sheet.cell(3 + 11 * i, 9).value) for i in range(4)]
+    katisu = [int(sheet.cell(4 + 11 * i, 9).value) for i in range(4)]
+    zensho = [int(sheet.cell(5 + 11 * i, 9).value) for i in range(4)]
+    hachi = [[int(sheet.cell(4 + i * 11 + j, 6).value) for i in range(4)] for j in range(8)]
 
-    cpcells = [(3, 9), (4, 9), (5, 9), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (11, 6)]
+    return katiten, katisu, zensho, hachi
+
+
+def ranking(cpcells):
+    # teams = [sheet.cell(3 + i * 11, 2).value for i in range(4)]
+
     cpnum = 0
     flag = True
     answer = []
     tms = [0, 1, 2, 3]
+
     while flag:
         cpvalue = []
         for i in tms:
-            cpvalue.append(int(sheet.cell(cpcells[cpnum][0] + i * 11, cpcells[cpnum][1]).value))
+            cpvalue.append(cpcells[cpnum][i])
         cpval_2 = list(zip(tms, cpvalue))
 
         cpvalue.sort(reverse=True)
@@ -71,21 +80,77 @@ def ranking():
             if (len(cpvalue) == 1) or (cpvalue[0] != cpvalue[1]):
                 for cpv in cpval_2:
                     if cpv[1] == cpvalue[0]:
-                        answer.append(teams[cpv[0]])
+                        answer.append(cpv[0])
                         tms.remove(cpv[0])
                 del cpvalue[0]
 
             else:
                 cpvalue = []
 
-        if len(answer) == 4 or cpnum == 10:
+        if len(answer) == 4:
             flag = False
+            return answer
+
+        elif cpnum == len(cpcells) - 1:
+            flag = False
+            return [5, 5, 5, 5]
 
         else:
             cpnum += 1
 
-    print(answer)
+
+def minreq1(teamlist, cdnum):
+    # teamlist=[todainum,vs_todainum,other1,other2] ( 0,1,2,3　
+    # cdnum = 1 or 2 ( 1位の条件 or 2位の条件 )
+    todai = 0
+    flag = True
+    katiten = [int(sheet.cell(3 + 11 * i, 9).value) for i in range(4)]
+    katisu = [int(sheet.cell(4 + 11 * i, 9).value) for i in range(4)]
+
+    while flag:
+        flag1 = True
+        katiten1 = copy.deepcopy(katiten)
+        katisu1 = copy.deepcopy(katisu)
+
+        katisu1[teamlist[0]] += todai
+        katisu1[teamlist[1]] += 5 - todai
+        if todai < 3:
+            katiten1[teamlist[1]] += 1
+        else:
+            katiten1[teamlist[0]] += 1
+
+        for i in range(6):
+            katisu1[teamlist[2]] += i
+            katisu1[teamlist[3]] += 5 - i
+            if i < 3:
+                katiten1[teamlist[3]] += 1
+            else:
+                katiten1[teamlist[2]] += 1
+            answer = ranking([katiten1, katisu1])
+            if cdnum == 1:
+                if answer[0] != teamlist[0]:
+                    flag1 = False
+            if cdnum == 2:
+                if answer[1] != teamlist[0] and answer[0] != teamlist[0]:
+                    flag1 = False
+        if flag1:
+            flag = False
+            print('必要な勝ち数は{}です'.format(todai))
+        elif todai == 5:
+            flag = False
+            print('クリアする最低条件はありません')
+        else:
+            todai += 1
+
 
 # vs()
 # calc()
-# ranking()
+'''
+ katiten, katisu, zensho, hachi = getvalues()
+ comparevalues=[katiten,katisu,zensho]
+ for i in range(8):
+    comparevalues.append(hachi[i])
+ ranking(comparevalues)
+'''
+
+# minreq1([1, 0, 2, 3], 2)
